@@ -204,7 +204,7 @@ curl -i -X POST http://localhost:8000/auth/login \
 <img width="1610" height="807" alt="Screenshot 2026-09-01 154414" src="https://github.com/user-attachments/assets/3db884c2-0b11-439c-ad2a-f5ab93d4ea9f" />
 <img width="1621" height="697" alt="Screenshot 2026-09-01 154442" src="https://github.com/user-attachments/assets/ee89f186-f3f1-4e90-bb8b-4f56e5ec7e73" />
 
-### Login returning 400 
+### Login returning 401
 <img width="1787" height="406" alt="Screenshot 2026-09-01 154534" src="https://github.com/user-attachments/assets/cbb5a918-fbe4-44f5-b4d8-4e00d99874c6" />
 
 
@@ -220,9 +220,8 @@ curl -i http://localhost:8000/public/info
 { "message": "Welcome stranger! This info is public." }
 ```
 
-![Public info returning 200 without any token](docs/screenshots/03-public-info.png)
-
----
+### Public info returning 200 without any token
+<img width="1440" height="742" alt="Screenshot 2026-09-01 154737" src="https://github.com/user-attachments/assets/f59e0000-0794-4159-bdbd-96664ef0fb98" />
 
 ### 4 · `GET /protected/profile` — the locked door
 
@@ -241,15 +240,15 @@ curl -i http://localhost:8000/protected/profile \
 }
 ```
 
-![Protected profile returning 200 with a valid token](docs/screenshots/04-profile-200.png)
-
+### Protected profile returning 200 with a valid token
 **Without a token** — nothing was presented:
-
 ```json
 { "error": "Access token required" }
 ```
 
-![Protected profile returning 401 with no token](docs/screenshots/05-profile-401-no-token.png)
+
+### Protected profile returning 401 with no token
+<img width="1342" height="811" alt="Screenshot 2026-09-01 154933" src="https://github.com/user-attachments/assets/d7ccec7b-e142-4296-acb3-153fb5f309f5" />
 
 **With a forged token** — change any single character of a real token and call again.
 Supabase checks the signature, so the edit is detected:
