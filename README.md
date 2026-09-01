@@ -269,6 +269,7 @@ curl -i -X POST http://localhost:8000/auth/logout \
 ```
 
 ### Logout returning 204
+<img width="1612" height="827" alt="Screenshot 2026-09-01 155905" src="https://github.com/user-attachments/assets/7318adef-b0a2-4668-8b1b-3c5fe90cd49c" />
 
 
 ### The guard
