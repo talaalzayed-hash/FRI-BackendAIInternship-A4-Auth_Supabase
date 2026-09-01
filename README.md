@@ -200,9 +200,13 @@ curl -i -X POST http://localhost:8000/auth/login \
 }
 ```
 
-![Login returning 200 and an access token](docs/screenshots/02-login.png)
+### Login returning 200 and an access token
+<img width="1610" height="807" alt="Screenshot 2026-09-01 154414" src="https://github.com/user-attachments/assets/3db884c2-0b11-439c-ad2a-f5ab93d4ea9f" />
+<img width="1621" height="697" alt="Screenshot 2026-09-01 154442" src="https://github.com/user-attachments/assets/ee89f186-f3f1-4e90-bb8b-4f56e5ec7e73" />
 
----
+### Login returning 400 
+<img width="1787" height="406" alt="Screenshot 2026-09-01 154534" src="https://github.com/user-attachments/assets/cbb5a918-fbe4-44f5-b4d8-4e00d99874c6" />
+
 
 ### 3 · `GET /public/info` — the open lobby
 
