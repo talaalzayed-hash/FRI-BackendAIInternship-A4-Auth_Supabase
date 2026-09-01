@@ -153,24 +153,6 @@ FastAPI generates interactive documentation from the code itself. Start the serv
 open **http://localhost:8000/docs** — every endpoint can be called straight from the page,
 and protected routes show a padlock icon.
 
-### Authorizing once
-
-1. Run `POST /auth/login` and copy the `access_token` value from the response.
-2. Click **Authorize** (top right) and paste **just the token** — no `Bearer ` prefix.
-   Swagger adds the scheme itself; typing it produces `Bearer Bearer <token>` and a 401.
-3. Click **Authorize**, then **Close**. The padlocks close and every protected call from
-   now on carries the header automatically.
-
-![The Authorize dialog](docs/screenshots/00-authorize.png)
-
-> **Why a security scheme and not a header field?** The OpenAPI specification states that a
-> header parameter named `Authorization` *"SHALL be ignored"*. Swagger obeys that literally:
-> such a box is never transmitted, so every call looks like a missing token no matter what
-> you type. This project therefore declares a proper `HTTPBearer` scheme — that is what
-> makes the **Authorize** button appear and actually send the header.
-
----
-
 ### 1 · `POST /auth/signup` — create an account
 
 No authentication. Returns `201` with the new user, or `400` if a field is missing or
