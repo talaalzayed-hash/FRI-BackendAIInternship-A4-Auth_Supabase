@@ -1,10 +1,10 @@
-from fastapi import APIRouter, status # type: ignore
+from fastapi import APIRouter, Depends, Response, status # type: ignore
 from fastapi.encoders import jsonable_encoder # type: ignore
 from fastapi.responses import JSONResponse
 
 from app.database.database import supabase
 from app.schemas import AuthCredentials
-from app.security import json_error
+from app.security import CurrentUser, get_current_user, json_error
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -52,3 +52,18 @@ def login(credentials: AuthCredentials):
         "expires_in": result.session.expires_in,
         "user": jsonable_encoder(result.user),
     }
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+def logout(current_user: CurrentUser = Depends(get_current_user)):
+    """End the user's session. Protected: it uses the same guard.
+    204 means "done, and there is nothing to say" - no body at all.
+    """
+    try:
+        supabase.auth.sign_out()
+    except Exception:
+        # The guard already proved who this is, so the caller is logged out
+        # as far as this API is concerned. Supabase can complain that the
+        # server-side client held no session of its own; that is not the
+        # caller's problem and must not turn a valid logout into an error.
+        pass
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
