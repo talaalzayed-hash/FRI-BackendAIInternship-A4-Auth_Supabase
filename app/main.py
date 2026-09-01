@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.routers import auth
+from app.routers import auth, protected, public
 
 app = FastAPI(
     title="Auth API",
@@ -9,6 +9,8 @@ app = FastAPI(
 )
 
 app.include_router(auth.router)
+app.include_router(protected.router)
+app.include_router(public.router)
 
 @app.get("/", tags=["meta"])
 def root():
