@@ -171,11 +171,13 @@ curl -i -X POST http://localhost:8000/auth/signup \
 }
 ```
 
-! [Signup returning 201]
+### Signup returning 201
 <img width="1540" height="827" alt="Screenshot 2026-09-01 153616" src="https://github.com/user-attachments/assets/2b22b99f-d150-440e-81a4-dd5425e6a69d" />
 <img width="1537" height="672" alt="Screenshot 2026-09-01 153645" src="https://github.com/user-attachments/assets/2d3c7be2-521c-48a4-b2cb-0ab341275a55" />
 
----
+### Signup returning 400
+<img width="1540" height="337" alt="Screenshot 2026-09-01 154206" src="https://github.com/user-attachments/assets/c021b029-cbfb-4bdc-bb39-036f74e8773e" />
+
 
 ### 2 · `POST /auth/login` — exchange credentials for a token
 
