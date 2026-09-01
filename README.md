@@ -241,33 +241,24 @@ curl -i http://localhost:8000/protected/profile \
 ```
 
 ### Protected profile returning 200 with a valid token
+<img width="1343" height="816" alt="Screenshot 2026-09-01 155208" src="https://github.com/user-attachments/assets/1e44a939-c175-492f-9c11-1477b177a950" />
+
+### Protected profile returning 401 with no token
 **Without a token** — nothing was presented:
 ```json
 { "error": "Access token required" }
 ```
-
-
-### Protected profile returning 401 with no token
 <img width="1342" height="811" alt="Screenshot 2026-09-01 154933" src="https://github.com/user-attachments/assets/d7ccec7b-e142-4296-acb3-153fb5f309f5" />
 
+### Protected profile returning 401 for a tampered token
 **With a forged token** — change any single character of a real token and call again.
 Supabase checks the signature, so the edit is detected:
-
 ```json
 { "error": "Invalid or expired token" }
 ```
-
-![Protected profile returning 401 for a tampered token](docs/screenshots/06-profile-401-forged.png)
-
-The two 401 messages are deliberately different: *you showed me nothing* and *you showed me
-something fake* are different facts about the request. The second never says **why** it
-failed — expired, tampered with, or unknown — because that would only help an attacker
-tune the next attempt.
-
----
+<img width="1350" height="302" alt="Screenshot 2026-09-01 155338" src="https://github.com/user-attachments/assets/640162e5-957f-437c-af8c-f1980ec69159" />
 
 ### 5 · `POST /auth/logout` — end the session
-
 Protected: it uses the same guard as `/protected/profile`. Returns `204 No Content` —
 success with nothing to say, so the body is empty.
 
@@ -277,9 +268,8 @@ curl -i -X POST http://localhost:8000/auth/logout \
 # HTTP/1.1 204 No Content
 ```
 
-![Logout returning 204](docs/screenshots/07-logout.png)
+### Logout returning 204
 
----
 
 ### The guard
 
