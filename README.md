@@ -147,18 +147,56 @@ would only help an attacker tune the next attempt.
 
 ---
 
-## Example requests
+## Swagger UI and results
 
-**Sign up**
+FastAPI generates interactive documentation from the code itself. Start the server and
+open **http://localhost:8000/docs** — every endpoint can be called straight from the page,
+and protected routes show a padlock icon.
+
+### Authorizing once
+
+1. Run `POST /auth/login` and copy the `access_token` value from the response.
+2. Click **Authorize** (top right) and paste **just the token** — no `Bearer ` prefix.
+   Swagger adds the scheme itself; typing it produces `Bearer Bearer <token>` and a 401.
+3. Click **Authorize**, then **Close**. The padlocks close and every protected call from
+   now on carries the header automatically.
+
+![The Authorize dialog](docs/screenshots/00-authorize.png)
+
+> **Why a security scheme and not a header field?** The OpenAPI specification states that a
+> header parameter named `Authorization` *"SHALL be ignored"*. Swagger obeys that literally:
+> such a box is never transmitted, so every call looks like a missing token no matter what
+> you type. This project therefore declares a proper `HTTPBearer` scheme — that is what
+> makes the **Authorize** button appear and actually send the header.
+
+---
+
+### 1 · `POST /auth/signup` — create an account
+
+No authentication. Returns `201` with the new user, or `400` if a field is missing or
+Supabase rejects the credentials.
 
 ```bash
 curl -i -X POST http://localhost:8000/auth/signup \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"password123"}'
-# 201 Created
 ```
 
-**Log in — returns the token**
+```json
+{
+  "message": "User created",
+  "user": { "id": "0f8c...", "email": "test@example.com", "...": "..." }
+}
+```
+
+![Signup returning 201](docs/screenshots/01-signup.png)
+
+---
+
+### 2 · `POST /auth/login` — exchange credentials for a token
+
+No authentication. Returns `200` with the signed JWT, or `401` for bad credentials.
+This is where you get the token everything else needs.
 
 ```bash
 curl -i -X POST http://localhost:8000/auth/login \
@@ -176,7 +214,29 @@ curl -i -X POST http://localhost:8000/auth/login \
 }
 ```
 
-**Read the protected profile**
+![Login returning 200 and an access token](docs/screenshots/02-login.png)
+
+---
+
+### 3 · `GET /public/info` — the open lobby
+
+No authentication, no token, no padlock. Anyone may call it.
+
+```bash
+curl -i http://localhost:8000/public/info
+```
+
+```json
+{ "message": "Welcome stranger! This info is public." }
+```
+
+![Public info returning 200 without any token](docs/screenshots/03-public-info.png)
+
+---
+
+### 4 · `GET /protected/profile` — the locked door
+
+Requires `Authorization: Bearer <token>`. Returns the caller's safe metadata.
 
 ```bash
 curl -i http://localhost:8000/protected/profile \
@@ -191,47 +251,52 @@ curl -i http://localhost:8000/protected/profile \
 }
 ```
 
-Change any single character of that token and run it again — the response becomes
-`401 {"error": "Invalid or expired token"}`. That is a forged pass being rejected.
+![Protected profile returning 200 with a valid token](docs/screenshots/04-profile-200.png)
 
-**Log out**
+**Without a token** — nothing was presented:
+
+```json
+{ "error": "Access token required" }
+```
+
+![Protected profile returning 401 with no token](docs/screenshots/05-profile-401-no-token.png)
+
+**With a forged token** — change any single character of a real token and call again.
+Supabase checks the signature, so the edit is detected:
+
+```json
+{ "error": "Invalid or expired token" }
+```
+
+![Protected profile returning 401 for a tampered token](docs/screenshots/06-profile-401-forged.png)
+
+The two 401 messages are deliberately different: *you showed me nothing* and *you showed me
+something fake* are different facts about the request. The second never says **why** it
+failed — expired, tampered with, or unknown — because that would only help an attacker
+tune the next attempt.
+
+---
+
+### 5 · `POST /auth/logout` — end the session
+
+Protected: it uses the same guard as `/protected/profile`. Returns `204 No Content` —
+success with nothing to say, so the body is empty.
 
 ```bash
 curl -i -X POST http://localhost:8000/auth/logout \
   -H "Authorization: Bearer PASTE_ACCESS_TOKEN_HERE"
-# 204 No Content
+# HTTP/1.1 204 No Content
 ```
 
----
-
-## Using Swagger UI
-
-Open **http://localhost:8000/docs**. Protected routes show a padlock icon.
-
-1. Run `POST /auth/login` and copy the `access_token` value from the response.
-2. Click **Authorize** (top right) and paste **just the token** — no `Bearer ` prefix.
-   Swagger adds the scheme itself; typing it produces `Bearer Bearer <token>` and a 401.
-3. Click Authorize, then Close. The padlocks close.
-4. Run `GET /protected/profile` → **Try it out** → **Execute** → `200`.
-
-> **Note:** OpenAPI forbids documenting `Authorization` as an ordinary header parameter —
-> Swagger silently drops such a field and never sends it. That is why this project declares
-> a proper `HTTPBearer` security scheme instead; it is what makes the **Authorize** button
-> appear and actually transmit the header.
-
-### Screenshot
-
-![Swagger UI showing the Authorize padlock and the protected profile route](docs/swagger.png)
-
-*(Replace with your own screenshot: take one of `/docs` after authorizing, showing the
-padlocks and a successful `200` from `/protected/profile`.)*
+![Logout returning 204](docs/screenshots/07-logout.png)
 
 ---
 
-## The guard
+### The guard
 
-`app/security.py` holds a single FastAPI dependency, `get_current_user`, used by every
-protected route:
+Every protected route above is guarded by **one** function — `get_current_user` in
+`app/security.py`. It extracts the token from the header, asks Supabase to verify it, and
+hands the verified user to the route:
 
 ```python
 @router.get("/profile")
@@ -239,17 +304,21 @@ def profile(current_user: CurrentUser = Depends(get_current_user)):
     return current_user.public_profile()
 ```
 
-That is the whole handler. Protecting a new route means adding that one parameter — no
-authentication code is copied, so no door can be left unguarded by forgetting to paste
-the check in.
+That is the entire handler. `app/routers/` contains no token-checking code at all.
+Protecting a new route means adding that one parameter — nothing is copied, so no door can
+be left unguarded by forgetting to paste the check in.
 
-The guard **raises** on failure rather than returning an error. A dependency that returns
-a value is treated as a success and hands that value to the route, so raising is what
-guarantees the handler body is never entered by an unverified caller. `main.py` converts
-the raised `AuthError` into the standard `{"error": "..."}` response.
+Three details that matter:
 
-Successful responses return **safe metadata only** — id, email, created date. Never the
-token, the session, or `app_metadata`.
+- **The guard raises, it does not return.** A dependency that returns a value is treated as
+  a success and that value is handed to the route. Raising is what guarantees the handler
+  body is never entered by an unverified caller. `main.py` turns the raised `AuthError`
+  into the standard `{"error": "..."}` response.
+- **Verification is a network call**, `supabase.auth.get_user(token)`, not a local guess.
+  Supabase holds the signing key, so only Supabase can say for certain that a token is
+  genuine and unexpired.
+- **Only safe metadata comes back** — id, email, created date. Never the token, the
+  session, or `app_metadata`.
 
 ---
 
